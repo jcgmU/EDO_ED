@@ -9,6 +9,7 @@ import {
   Legend,
   ReferenceLine,
 } from 'recharts';
+import { InlineMath } from 'react-katex';
 import type { SolveResult } from '../utils/math-solver';
 
 interface Props {
@@ -41,11 +42,11 @@ export default function DepreciationChart({ result }: Props) {
     <div className="space-y-6">
       {/* Info cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <InfoCard title="Ecuación del sistema" value={equation} mono />
-        <InfoCard title="Solución particular" value={solution} mono />
-        <InfoCard title="Raíces características" value={roots} mono />
+        <KatexCard title="Ecuación del sistema" math={equationToLatex(equation)} />
+        <KatexCard title="Solución particular" math={solutionToLatex(solution)} />
+        <KatexCard title="Raíces características" math={rootsToLatex(roots)} />
         {discriminant !== undefined && (
-          <InfoCard title="Discriminante Δ = b² − 4ac" value={discriminant.toFixed(4)} mono />
+          <KatexCard title="Discriminante" math={`\\Delta = b^2 - 4ac = ${discriminant.toFixed(4)}`} />
         )}
         {systemType && (
           <div className={`rounded-xl px-4 py-3 ${SYSTEM_COLORS[systemType]}`}>
@@ -56,7 +57,9 @@ export default function DepreciationChart({ result }: Props) {
         {replacementYear !== null && (
           <div className="rounded-xl px-4 py-3 bg-orange-50 text-orange-700">
             <p className="text-xs font-medium opacity-70">Punto de reemplazo recomendado</p>
-            <p className="font-semibold">t ≈ {replacementYear} años (V ≤ 10% V₀)</p>
+            <p className="font-semibold flex items-center gap-1">
+              <InlineMath math={`t \\approx ${replacementYear}`} /> años <span className="text-sm">(V ≤ 10% V₀)</span>
+            </p>
           </div>
         )}
       </div>
@@ -109,11 +112,39 @@ export default function DepreciationChart({ result }: Props) {
   );
 }
 
-function InfoCard({ title, value, mono }: { title: string; value: string; mono?: boolean }) {
+function KatexCard({ title, math }: { title: string; math: string }) {
   return (
-    <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3">
-      <p className="text-xs font-medium text-gray-400 mb-0.5">{title}</p>
-      <p className={`text-sm font-semibold text-gray-800 break-all ${mono ? 'font-mono' : ''}`}>{value}</p>
+    <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 overflow-x-auto">
+      <p className="text-xs font-medium text-gray-400 mb-1">{title}</p>
+      <InlineMath math={math} />
     </div>
   );
+}
+
+// Convert solver output strings to LaTeX
+function equationToLatex(eq: string): string {
+  return eq
+    .replace(/V''/g, "V''")
+    .replace(/V'/g, "V'")
+    .replace(/\*/g, '\\cdot ')
+    .replace(/(\d+)V''\(t\)/g, '$1V\'\'(t)')
+    .replace(/(\d+)V'\(t\)/g, '$1V\'(t)')
+    .replace(/(\d+)V\(t\)/g, '$1V(t)')
+    .replace('= 0', '= 0');
+}
+
+function solutionToLatex(sol: string): string {
+  // e^(Xt) → e^{Xt}, e^(-2t) → e^{-2t}
+  return sol
+    .replace(/e\^\(([^)]+)\)/g, 'e^{$1}')
+    .replace(/·/g, '\\cdot ')
+    .replace(/\*/g, '\\cdot ');
+}
+
+function rootsToLatex(roots: string): string {
+  return roots
+    .replace(/r₁/g, 'r_1')
+    .replace(/r₂/g, 'r_2')
+    .replace(/±/g, '\\pm ')
+    .replace(/(\d+\.\d+)i/g, '$1i');
 }

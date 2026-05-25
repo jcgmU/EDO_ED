@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BlockMath, InlineMath } from 'react-katex';
 import ParameterForm, { type ModelType, type FirstOrderState, type SecondOrderState } from './components/ParameterForm';
 import DepreciationChart from './components/DepreciationChart';
 import { solveFirstOrder, solveSecondOrder, type SolveResult } from './utils/math-solver';
@@ -44,14 +45,24 @@ export default function App() {
           <aside className="lg:col-span-1">
             <ParameterForm onSolve={handleSolve} loading={loading} />
 
-            <div className="mt-5 bg-white rounded-2xl shadow-md p-5 text-xs text-gray-500 space-y-2">
+            <div className="mt-5 bg-white rounded-2xl shadow-md p-5 space-y-4">
               <p className="font-semibold text-gray-700 text-sm">Referencia académica</p>
-              <p><span className="font-medium">1° Orden:</span> dV/dt = −k·V(t)<br />V(t) = V₀·e^(−kt)</p>
-              <p><span className="font-medium">2° Orden:</span> aV'' + bV' + cV = 0<br />
-                Valores del paper: a=1, b=5, c=6<br />
-                V(0)=120 (miles USD), V'(0)=−20<br />
-                <span className="text-indigo-600 font-mono">V(t) = 340e^(−2t) − 220e^(−3t)</span>
-              </p>
+              <div>
+                <p className="text-xs font-medium text-gray-500 mb-1">1° Orden</p>
+                <div className="overflow-x-auto">
+                  <BlockMath math="\frac{dV}{dt} = -k \cdot V(t) \;\Rightarrow\; V(t) = V_0 e^{-kt}" />
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-500 mb-1">2° Orden — valores del paper</p>
+                <div className="overflow-x-auto">
+                  <BlockMath math="V'' + 5V' + 6V = 0" />
+                  <BlockMath math="V(0)=120,\quad V'(0)=-20" />
+                  <div className="text-center">
+                    <InlineMath math="V(t) = 340e^{-2t} - 220e^{-3t}" />
+                  </div>
+                </div>
+              </div>
             </div>
           </aside>
 
