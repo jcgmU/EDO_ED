@@ -1,9 +1,14 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { IncomingMessage, ServerResponse } from 'http';
 import { solveFirstOrder, solveSecondOrder } from '../src/utils/math-solver';
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
+interface Req extends IncomingMessage {
+  body: Record<string, unknown>;
+}
+
+export default function handler(req: Req, res: ServerResponse & { status: (c: number) => typeof res; json: (b: unknown) => void }) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
   }
 
   try {
@@ -16,11 +21,12 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       const years = Number(body.years);
 
       if (isNaN(V0) || isNaN(k) || isNaN(years) || V0 <= 0 || k <= 0 || years <= 0) {
-        return res.status(400).json({ error: 'Parámetros inválidos' });
+        res.status(400).json({ error: 'Parámetros inválidos' });
+        return;
       }
 
-      const result = solveFirstOrder({ V0, k, years });
-      return res.status(200).json(result);
+      res.status(200).json(solveFirstOrder({ V0, k, years }));
+      return;
     }
 
     if (model === 'second-order') {
@@ -32,15 +38,16 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       const years = Number(body.years);
 
       if ([V0, dV0, a, b, c, years].some(isNaN) || V0 <= 0 || a === 0 || years <= 0) {
-        return res.status(400).json({ error: 'Parámetros inválidos' });
+        res.status(400).json({ error: 'Parámetros inválidos' });
+        return;
       }
 
-      const result = solveSecondOrder({ V0, dV0, a, b, c, years });
-      return res.status(200).json(result);
+      res.status(200).json(solveSecondOrder({ V0, dV0, a, b, c, years }));
+      return;
     }
 
-    return res.status(400).json({ error: 'Modelo desconocido. Use "first-order" o "second-order"' });
-  } catch (err) {
-    return res.status(500).json({ error: 'Error interno al resolver la EDO' });
+    res.status(400).json({ error: 'Modelo desconocido. Use "first-order" o "second-order"' });
+  } catch {
+    res.status(500).json({ error: 'Error interno al resolver la EDO' });
   }
 }
